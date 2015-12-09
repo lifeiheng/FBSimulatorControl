@@ -19,16 +19,58 @@
 
 @property (nonatomic, strong, readwrite) FBSimulatorHistory *history;
 
+- (instancetype)initWithHistory:(FBSimulatorHistory *)history;
+
+@end
+
+@interface FBSimulatorHistoryGenerator_Persistant : FBSimulatorHistoryGenerator
+
+@property (nonatomic, copy, readonly) NSString *persistentPath;
+
+- (instancetype)initWithHistory:(FBSimulatorHistory *)history persistentPath:(NSString *)persistentPath;
+
+@end
+
+@implementation FBSimulatorHistoryGenerator_Persistant
+
+- (void)setHistory:(FBSimulatorHistory *)history
+{
+  [super setHistory:history];
+
+  [NSKeyedArchiver archiveRootObject:history toFile:self.persistentPath];
+}
+
+- (instancetype)initWithHistory:(FBSimulatorHistory *)history persistentPath:(NSString *)persistentPath
+{
+  self = [super initWithHistory:history];
+  if (!self) {
+    return nil;
+  }
+
+  _persistentPath = persistentPath;
+
+  return self;
+}
+
 @end
 
 @implementation FBSimulatorHistoryGenerator
 
-+ (instancetype)withSimulator:(FBSimulator *)simulator;
-{
-  FBSimulatorHistory *history = [FBSimulatorHistory new];
-  history.simulatorState = simulator.state;
+#pragma mark Initializers
 
-  return [[FBSimulatorHistoryGenerator new] initWithHistory:history];
++ (instancetype)generatorWithFreshHistoryForSimulator:(FBSimulator *)simulator
+{
+  return [[FBSimulatorHistoryGenerator new] initWithHistory:[self freshHistoryForSimulator:simulator]];
+}
+
++ (instancetype)generatorWithPersistantHistoryForSimulator:(FBSimulator *)simulator
+{
+  NSString *path = [self pathForPerisistantHistory:simulator];
+  if (!path) {
+    return [self generatorWithFreshHistoryForSimulator:simulator];
+  }
+  FBSimulatorHistory *history =  [NSKeyedUnarchiver unarchiveObjectWithFile:path] ?: [self freshHistoryForSimulator:simulator];
+  return [[FBSimulatorHistoryGenerator_Persistant alloc] initWithHistory:history persistentPath:path];
 }
 
 - (instancetype)initWithHistory:(FBSimulatorHistory *)history
@@ -43,9 +85,27 @@
   return self;
 }
 
+#pragma mark Public
+
 - (FBSimulatorHistory *)currentState
 {
   return self.history;
+}
+
+#pragma mark Persistence
+
++ (NSString *)pathForPerisistantHistory:(FBSimulator *)simulator
+{
+  return [[simulator.dataDirectory
+    stringByAppendingPathComponent:@"fbsimulatorcontrol"]
+    stringByAppendingPathExtension:@"history"];
+}
+
++ (FBSimulatorHistory *)freshHistoryForSimulator:(FBSimulator *)simulator
+{
+  FBSimulatorHistory *history = [FBSimulatorHistory new];
+  history.simulatorState = simulator.state;
+  return history;
 }
 
 #pragma mark FBSimulatorEventSink Implementation

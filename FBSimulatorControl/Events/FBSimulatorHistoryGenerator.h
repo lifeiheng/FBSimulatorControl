@@ -24,9 +24,22 @@
 @interface FBSimulatorHistoryGenerator : NSObject <FBSimulatorEventSink>
 
 /**
- Creates and returns a State Event Sink for the given Simulator
+ Creates and returns a History Generator for the Provided Simulator.
+ The Generator will not read-from or write-to a persistent store.
+ 
+ @param simulator the Simulator to generate history for. Will not be retained. Must not be nil.
+ @return a new FBSimulatorHistoryGenerator instance
  */
-+ (instancetype)withSimulator:(FBSimulator *)simulator;
++ (instancetype)generatorWithFreshHistoryForSimulator:(FBSimulator *)simulator;
+
+/**
+ Creates and returns a History Generator for the Provided Simulator.
+ The Generator attempt to read-from and write-to a persistent store.
+ 
+ @param simulator the Simulator to generate history for. Will not be retained. Must not be nil.
+ @return a new FBSimulatorHistoryGenerator instance
+ */
++ (instancetype)generatorWithPersistantHistoryForSimulator:(FBSimulator *)simulator;
 
 /**
  The Current History.

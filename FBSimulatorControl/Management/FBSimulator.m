@@ -42,11 +42,12 @@ NSTimeInterval const FBSimulatorDefaultTimeout = 20;
 
 + (instancetype)fromSimDevice:(SimDevice *)device configuration:(FBSimulatorConfiguration *)configuration pool:(FBSimulatorPool *)pool query:(FBProcessQuery *)query
 {
-  return [[FBSimulator alloc]
+  return [[[FBSimulator alloc]
     initWithDevice:device
     configuration:configuration ?: [self inferSimulatorConfigurationFromDevice:device]
     pool:pool
-    query:query];
+    query:query]
+    attachEventSinkComposition];
 }
 
 + (FBSimulatorConfiguration *)inferSimulatorConfigurationFromDevice:(SimDevice *)device
@@ -66,10 +67,17 @@ NSTimeInterval const FBSimulatorDefaultTimeout = 20;
   _pool = pool;
   _processQuery = query;
 
-  FBSimulatorHistoryGenerator *historyGenerator = [FBSimulatorHistoryGenerator withSimulator:self];
+  return self;
+}
+
+- (instancetype)attachEventSinkComposition;
+{
+  FBSimulatorHistoryGenerator *historyGenerator = persistHistory
+    ? [FBSimulatorHistoryGenerator generatorWithPersistantHistoryForSimulator:self]
+    : [FBSimulatorHistoryGenerator generatorWithFreshHistoryForSimulator:self];
   FBSimulatorNotificationEventSink *notificationSink = [FBSimulatorNotificationEventSink withSimulator:self];
   FBCompositeSimulatorEventSink *compositeSink = [FBCompositeSimulatorEventSink withSinks:@[historyGenerator, notificationSink]];
-  FBSimulatorEventRelay *relay = [[FBSimulatorEventRelay alloc] initWithSimDevice:device processQuery:query sink:compositeSink];
+  FBSimulatorEventRelay *relay = [[FBSimulatorEventRelay alloc] initWithSimDevice:self.device processQuery:self.processQuery sink:compositeSink];
 
   _historyGenerator = historyGenerator;
   _eventRelay = relay;
