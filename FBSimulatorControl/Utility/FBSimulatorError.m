@@ -22,6 +22,7 @@ NSString *const FBSimulatorControlErrorDomain = @"com.facebook.FBSimulatorContro
 
 @property (nonatomic, copy, readwrite) NSString *describedAs;
 @property (nonatomic, copy, readwrite) NSError *cause;
+@property (nonatomic, strong, readwrite) id<FBSimulatorLogger> logger;
 @property (nonatomic, strong, readwrite) NSMutableDictionary *additionalInfo;
 @property (nonatomic, assign, readwrite) BOOL describeRecursively;
 
@@ -38,6 +39,8 @@ NSString *const FBSimulatorControlErrorDomain = @"com.facebook.FBSimulatorContro
 
   _additionalInfo = [NSMutableDictionary dictionary];
   _describeRecursively = YES;
+  _logger = FBSimulatorControlStaticConfiguration.defaultLogger;
+
   return self;
 }
 
@@ -140,6 +143,12 @@ NSString *const FBSimulatorControlErrorDomain = @"com.facebook.FBSimulatorContro
     value:[query processInfoFor:processIdentifier] ?: @"No Process Info"];
 }
 
+- (instancetype)logger:(id<FBSimulatorLogger>)logger
+{
+  self.logger = logger;
+  return self;
+}
+
 - (NSError *)build
 {
   // If there's just a cause, there's no error to build
@@ -155,8 +164,9 @@ NSString *const FBSimulatorControlErrorDomain = @"com.facebook.FBSimulatorContro
     userInfo[NSUnderlyingErrorKey] = self.underlyingError;
   }
   [userInfo addEntriesFromDictionary:self.additionalInfo];
+
   NSError *error = [NSError errorWithDomain:FBSimulatorControlErrorDomain code:0 userInfo:[userInfo copy]];
-  [FBSimulatorControlStaticConfiguration.defaultLogger logMessage:@"Error => %@", error];
+  [self.logger.error log:@"Error => %@", error];
   return error;
 }
 

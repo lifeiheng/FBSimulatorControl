@@ -30,7 +30,7 @@ static void LoadFrameworkAtPath(id<FBSimulatorLogger> logger, NSString *path)
   NSError *error = nil;
   BOOL success = [bundle loadAndReturnError:&error];
   NSCAssert(success, @"Could not load bundle with error %@", error);
-  [logger logMessage:@"Successfully loaded %@", path.lastPathComponent];
+  [logger log:@"Successfully loaded %@", path.lastPathComponent];
 }
 
 /**
@@ -77,18 +77,18 @@ static void LoadPrivateFrameworks(id<FBSimulatorLogger> logger)
     @"DVTDevice" : @"../SharedFrameworks/DVTFoundation.framework",
     @"DTiPhoneSimulatorApplicationSpecifier" : @"../SharedFrameworks/DVTiPhoneSimulatorRemoteClient.framework"
   };
-  [logger logMessage:@"Using Developer Directory %@", developerDirectory];
+  [logger log:@"Using Developer Directory %@", developerDirectory];
 
   for (NSString *className in classMapping) {
     NSString *relativePath = classMapping[className];
     NSString *path = [[developerDirectory stringByAppendingPathComponent:relativePath] stringByStandardizingPath];
     if (NSClassFromString(className)) {
-      [logger logMessage:@"%@ is allready loaded, skipping load of framework %@", className, path];
+      [logger log:@"%@ is allready loaded, skipping load of framework %@", className, path];
       VerifyDeveloperDirectoryForPrivateClass(className, developerDirectory);
       continue;
     }
 
-    [logger logMessage:@"%@ is not loaded. Loading %@ at path %@", className, path.lastPathComponent, path];
+    [logger log:@"%@ is not loaded. Loading %@ at path %@", className, path.lastPathComponent, path];
     LoadFrameworkAtPath(logger, path);
 
     NSCAssert(NSClassFromString(className), @"Expected %@ to be loaded after %@ was loaded", className, path.lastPathComponent);

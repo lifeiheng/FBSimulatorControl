@@ -10,11 +10,29 @@
 #import <Foundation/Foundation.h>
 
 /**
- A protocol for defining a class that recieves logger messages.
+ A Protocol for Classes that recieve Logger Messages.
  */
 @protocol FBSimulatorLogger <NSObject>
 
-- (void)logMessage:(NSString *)format, ... NS_FORMAT_FUNCTION(1,2);
+/**
+ Logs a Message with the Provided format.
+ */
+- (void)log:(NSString *)format, ... NS_FORMAT_FUNCTION(1,2);
+
+/**
+ Returns the Debug Logger Variant.
+ */
+- (id<FBSimulatorLogger>)info;
+
+/**
+ Returns the Debug Logger Variant.
+ */
+- (id<FBSimulatorLogger>)debug;
+
+/**
+ Returns the Debug Logger Variant.
+ */
+- (id<FBSimulatorLogger>)error;
 
 @end
 

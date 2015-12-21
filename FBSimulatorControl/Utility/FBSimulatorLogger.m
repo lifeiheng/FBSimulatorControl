@@ -11,16 +11,56 @@
 
 @interface FBSimulatorLogger_NSLog : NSObject<FBSimulatorLogger>
 
+@property (nonatomic, copy, readonly) NSString *prefix;
+
 @end
 
 @implementation FBSimulatorLogger_NSLog
 
-- (void)logMessage:(NSString *)format, ...
+- (instancetype)initWithPrefix:(NSString *)prefix
+{
+  self = [super init];
+  if (!self) {
+    return nil;
+  }
+
+  _prefix = prefix;
+
+  return self;
+}
+
+- (void)log:(NSString *)format, ...
 {
   va_list args;
   va_start(args, format);
-  NSLogv(format, args);
+  NSString *string = [[NSString alloc] initWithFormat:format arguments:args];
   va_end(args);
+
+  [self logString:string];
+}
+
+- (void)logString:(NSString *)string
+{
+  if (self.prefix) {
+    NSLog(@"[%@] %@", self.prefix, string);
+    return;
+  }
+  NSLog(@"%@", string);
+}
+
+- (id<FBSimulatorLogger>)info
+{
+  return [[FBSimulatorLogger_NSLog alloc] initWithPrefix:@"info"];
+}
+
+- (id<FBSimulatorLogger>)debug
+{
+  return [[FBSimulatorLogger_NSLog alloc] initWithPrefix:@"debug"];
+}
+
+- (id<FBSimulatorLogger>)error
+{
+  return [[FBSimulatorLogger_NSLog alloc] initWithPrefix:@"error"];
 }
 
 @end
@@ -29,7 +69,7 @@
 
 + (id<FBSimulatorLogger>)toNSLog
 {
-  return [FBSimulatorLogger_NSLog new];
+  return [[FBSimulatorLogger_NSLog alloc] initWithPrefix:nil];
 }
 
 @end
